@@ -30,6 +30,7 @@ func LoggerConnInit() {
 
 func LoggerInit() *logrus.Logger {
 	logger := logrus.New()
+//	host, _ := os.Hostname()
 
 	logger.Out = os.Stdout
 //	logger.Level = models.ConvertLevel(viper.GetString("log.level"))
@@ -39,6 +40,24 @@ func LoggerInit() *logrus.Logger {
 		return logger
 	}
 
+	/*
+	hook := logrustash.New(logConn, logrustash.LogstashFormatter{
+		Fields: logrus.Fields{
+			"type":     "platform",
+			"hostname": host,
+			"service":  "configGO",
+			"release":  viper.GetString("release"),
+		},
+		Formatter: &logrus.JSONFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime: "@timestamp",
+				logrus.FieldKeyMsg:  "message",
+			},
+			TimestampFormat: time.RFC3339Nano,
+		}})
+	logger.Hooks.Add(hook)
+	*/
+
 	return logger
 }
 
@@ -46,7 +65,6 @@ func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := GetLogger(c)
 		if log == nil {
-			logrus.Info("start init logger")
 			log = LoggerInit().WithField(RequestIDKey, GetRequestID(c))
 		}
 
