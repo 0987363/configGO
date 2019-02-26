@@ -4,7 +4,7 @@
         "mongodb": "172.31.174.96:27017"
     },
     "authentication" : {
-        "secret" : "AES256-Cattle-heifeng-huteng-123400"
+        "secret" : "xxxxxxxxxxxxxxx"
     },
     "etcd": {
         "address": "http://172.31.174.96:3379",
