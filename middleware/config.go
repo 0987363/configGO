@@ -6,7 +6,7 @@ import (
 
 const configKey = "ConfigGO"
 
-func Config(m interface{}, handle gin.HandlerFunc) gin.HandlerFunc {
+func CacheConfig(m interface{}, handle gin.HandlerFunc) gin.HandlerFunc {
 	if m == nil {
 		return handle
 	}

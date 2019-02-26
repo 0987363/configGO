@@ -13,7 +13,7 @@
         "key": ""
     },
     "oss" : {
-        "access_key_id" : "abc",
+        "access_key_id" : "abcceeee",
         "access_key_secret" : "efg",
         "endpoint" : "aaffe",
         "bucket_name" : "abcd"

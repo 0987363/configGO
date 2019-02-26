@@ -19,7 +19,7 @@ func Init() {
 func buildRouter(mux *gin.RouterGroup, work map[string]interface{}) {
 	for k, v := range work {
 		fieldMux := mux.Group("/" + k)
-		fieldMux.GET("/", middleware.Config(v, Echo))
+		fieldMux.GET("/", middleware.CacheConfig(v, Echo))
 
 		if d, ok := v.(map[string]interface{}); ok {
 			buildRouter(fieldMux, d)

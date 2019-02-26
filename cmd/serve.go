@@ -2,18 +2,19 @@ package cmd
 
 import (
 	"github.com/0987363/configGO/handlers"
+	"github.com/0987363/configGO/common"
 	"github.com/0987363/configGO/middleware"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-const defaultAddress = ":8080"
+const defaultAddress = ":10001"
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:    "serve",
-	Short:  "Start cattle server",
+	Short:  "Start config server",
 	PreRun: LoadConfiguration,
 	Run:    serve,
 }
@@ -30,12 +31,13 @@ func serve(cmd *cobra.Command, args []string) {
 	key := viper.GetString("tls.key")
 
 	handlers.Init()
+	go common.Watch()
 
 	if cert != "" && key != "" {
-		log.Infof("Starting cattle configGO tls server on %s.", address)
+		log.Infof("Starting configGO tls server on %s.", address)
 		handlers.RootMux.RunTLS(address, cert, key)
 	} else {
-		log.Infof("Starting cattle configGO server on %s.", address)
+		log.Infof("Starting configGO server on %s.", address)
 		handlers.RootMux.Run(address)
 	}
 }
