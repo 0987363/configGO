@@ -7,8 +7,6 @@ BUILD_NUMBER=$(strip $(if $(TRAVIS_BUILD_NUMBER), $(TRAVIS_BUILD_NUMBER), 0))
 BUILD_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
-SRC = $(shell glide nv $(PACKAGE))
-
 .PHONY: all clean release build run
 
 all: run

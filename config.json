@@ -1,4 +1,8 @@
 {
-    "address": ":9291",
-    "work": "./work"
+    "address": ":10001",
+    "work": "./work",
+    "tls": {
+        "cert": "",
+        "key": ""
+    }
 }

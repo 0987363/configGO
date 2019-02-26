@@ -9,6 +9,6 @@ make run
 
 
 ```
-curl http://127.0.0.1:9291/test2/pikachu/nsq/
-curl http://127.0.0.1:9291/test2/pikachu/nsq/nsqd/address/
+curl http://127.0.0.1:10001/test2/pikachu/nsq/
+curl http://127.0.0.1:10001/test2/pikachu/nsq/nsqd/address/
 ```
