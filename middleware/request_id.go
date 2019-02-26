@@ -26,8 +26,7 @@ func RequestID() gin.HandlerFunc {
 
 			// Otherwise generate a new UUID
 			if id == "" {
-				v, _ := uuid.NewV4()
-				id = v.String()
+				id = uuid.NewV4().String()
 			}
 
 			c.Set(RequestIDKey, id)
