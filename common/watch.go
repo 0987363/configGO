@@ -12,8 +12,7 @@ import (
 
 func Watch() {
 	w := watcher.New()
-
-	//	w.SetMaxEvents(1)
+	w.SetMaxEvents(1)
 
 	r := regexp.MustCompile("(?i)(json$)|(toml$)")
 	w.AddFilterHook(watcher.RegexFilterHook(r, false))

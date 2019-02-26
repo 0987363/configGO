@@ -1,9 +1,15 @@
 package cmd
 
 import (
-	"github.com/0987363/configGO/handlers"
+	"net"
+	"net/http"
+	"path/filepath"
+	"strings"
+
 	"github.com/0987363/configGO/common"
+	"github.com/0987363/configGO/handlers"
 	"github.com/0987363/configGO/middleware"
+	"github.com/0987363/configGO/models"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,11 +39,33 @@ func serve(cmd *cobra.Command, args []string) {
 	handlers.Init()
 	go common.Watch()
 
+	addrs := strings.Split(address)
+	ips := []string{}
+	if addrs[0] == "0.0.0.0" || addrs[0] == "" {
+		ips = models.GetLocalIP()
+	} else {
+		ips = append(ips, addrs[0])
+	}
+	for _, addr := range addrs {
+		models.RegisterService(viper.GetString("url"))
+	}
+
+	ln, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Fatal("Listen failed: %v", err)
+	}
+	log.Println("Listening address:", ln.Addr().String())
+
+
+	srv := &http.Server{
+		Handler: handlers.RootMux,
+	}
+
 	if cert != "" && key != "" {
 		log.Infof("Starting configGO tls server on %s.", address)
-		handlers.RootMux.RunTLS(address, cert, key)
+		srv.ServeTLS(ln, cert, key)
 	} else {
 		log.Infof("Starting configGO server on %s.", address)
-		handlers.RootMux.Run(address)
+		srv.Serve(ln)
 	}
 }

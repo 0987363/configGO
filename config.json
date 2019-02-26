@@ -4,5 +4,12 @@
     "tls": {
         "cert": "",
         "key": ""
+    },
+    "etcd": {
+        "url": "/0987363/configGO",
+        "address": "http://192.168.88.16:2379",
+        "ca": "",
+        "cert": "",
+        "key": ""
     }
 }
