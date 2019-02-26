@@ -24,16 +24,6 @@ func init() {
 
 func serve(cmd *cobra.Command, args []string) {
 	middleware.LoggerConnInit()
-	/*
-	middleware.ConnectMicro()
-
-	// Try to connect to the database
-	if err := middleware.ConnectDB(
-		viper.GetString("database.mongodb"),
-	); err != nil {
-		log.Fatalln("connect to db:", err)
-	}
-	*/
 
 	address := viper.GetString("address")
 	cert := viper.GetString("tls.cert")
@@ -42,10 +32,10 @@ func serve(cmd *cobra.Command, args []string) {
 	handlers.Init()
 
 	if cert != "" && key != "" {
-		log.Infof("Starting cattle admin tls server on %s.", address)
+		log.Infof("Starting cattle configGO tls server on %s.", address)
 		handlers.RootMux.RunTLS(address, cert, key)
 	} else {
-		log.Infof("Starting cattle admin server on %s.", address)
+		log.Infof("Starting cattle configGO server on %s.", address)
 		handlers.RootMux.Run(address)
 	}
 }

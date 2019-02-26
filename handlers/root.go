@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"io/ioutil"
-	"path"
-	"reflect"
+	"path/filepath"
+	"strings"
 
 	"github.com/0987363/configGO/middleware"
 	"github.com/gin-gonic/gin"
@@ -18,21 +18,19 @@ func Init() {
 	RootMux.Use(gin.Logger())
 
 	work := viper.GetString("work")
-	log.Debug("Config path:", work)
+	if work == "" {
+		return
+	}
 
 	dirs, err := ioutil.ReadDir(work)
 	if err != nil {
-		log.Fatal("Read path failed:", err)
+		log.Fatal("Read work failed:", err)
 	}
-	log.Debug("Project count:", len(dirs))
 
 	m := make(map[string]interface{})
 	for _, p := range dirs {
-		log.Debug("Project:", p.Name())
-		m[p.Name()] = ReadProject(path.Join(work, p.Name()))
+		m[p.Name()] = ReadProject(filepath.Join(work, p.Name()))
 	}
-
-	log.Info("Config:", m)
 
 	BuildRouter(m)
 }
@@ -55,8 +53,6 @@ func BuildRouter(m map[string]interface{}) {
 			if d, ok := v.(map[string]interface{}); ok {
 				BuildUrl(sMux, d)
 			}
-			log.Debug("Value type:", reflect.TypeOf(v))
-
 		}
 	}
 }
@@ -82,24 +78,44 @@ func ReadProject(projectPath string) map[string]interface{} {
 	}
 
 	project := make(map[string]interface{})
-	log.Infof("Project: %s, Service count:%d", projectPath, len(files))
 	for _, file := range files {
-		log.Debugf("Project: %s, Service:%s", projectPath, file.Name())
-		project[file.Name()] = ReadService(path.Join(projectPath, file.Name()))
+		k, v := ReadService(projectPath, file.Name())
+		project[k] = v
+//		log.Infof("Project: %s, Service:%s, data:%v", projectPath, k, v)
 	}
 
 	return project
 }
 
-func ReadService(file string) map[string]interface{} {
+func ReadService(dir, name string) (string, map[string]interface{}) {
+	file := filepath.Join(dir, name)
+	ext := filepath.Ext(name)
+	name = strings.TrimSuffix(name, ext)
+	if ext[0] == '.' {
+		ext = ext[1:]
+	}
+
+	switch strings.ToLower(ext) {
+	case "json":
+		return name, ReadJsonService(file)
+	case "toml":
+		return name, ReadTomlService(file)
+	default:
+		return name, nil
+	}
+}
+
+func ReadTomlService(file string) map[string]interface{} {
+	return nil
+}
+
+func ReadJsonService(file string) map[string]interface{} {
 	data, _ := ioutil.ReadFile(file)
 
 	var m map[string]interface{}
 	if err := json.Unmarshal(data, &m); err != nil {
 		log.Fatalf("Unmarshal service:%s failed:%v", file, err)
 	}
-
-	log.Info("Service:", m)
 
 	return m
 }

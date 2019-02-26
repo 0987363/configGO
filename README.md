@@ -2,3 +2,13 @@ The Config Server Center for Go
 -------------------------
 
 This is a config server center, convert config file(json, toml) to http api by gin.
+
+```
+make run
+```
+
+
+```
+curl http://127.0.0.1:9291/test2/pikachu/nsq/
+curl http://127.0.0.1:9291/test2/pikachu/nsq/nsqd/address/
+```
