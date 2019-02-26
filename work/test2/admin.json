@@ -1,0 +1,26 @@
+{
+    "address": ":9291",
+    "database": {
+        "mongodb": "172.31.174.96:27017"
+    },
+    "authentication" : {
+        "secret" : "AES256-Cattle-heifeng-huteng-123400"
+    },
+    "etcd": {
+        "address": "http://172.31.174.96:3379",
+        "ca": "",
+        "cert": "",
+        "key": ""
+    },
+    "oss" : {
+        "access_key_id" : "abc",
+        "access_key_secret" : "efg",
+        "endpoint" : "aaffe",
+        "bucket_name" : "abcd"
+    },
+    "log": {
+        "level": "info",
+        "path": ""
+    },
+    "release": "beta"
+}

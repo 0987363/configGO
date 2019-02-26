@@ -1,0 +1,30 @@
+{
+    "address": "172.31.214.14:0",
+	"database": {
+        "mongodb": "172.31.174.96:27017"
+    },
+	"jpush": {
+		"appkey": "abc",
+		"secret": "efg"
+	},
+	"log": {
+		"level": "debug",
+		"path": ""
+	},
+	"nsq": {
+		"nsqlookupd": {
+			"address": "172.31.174.96:5161"
+		},
+		"nsqd": {
+			"address": "172.31.174.96:5150"
+		}
+	},
+	"etcd": {
+		"address": "http://172.31.174.96:3379",
+		"ca": "",
+		"cert": "",
+		"key": ""
+	},
+
+	"release": "beta"
+}
