@@ -8,7 +8,7 @@ import (
 
 	"github.com/0987363/configGO/models"
 	"github.com/0987363/configGO/service"
-	"github.com/coreos/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
