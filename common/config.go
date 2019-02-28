@@ -23,6 +23,9 @@ func ReadWork() map[string]interface{} {
 
 	m := make(map[string]interface{})
 	for _, p := range nameSpaces {
+		if p.Name()[0] == '.' {
+			continue
+		}
 		if !p.IsDir() {
 			continue
 		}
@@ -43,6 +46,9 @@ func readProject(projectPath string) map[string]interface{} {
 
 	project := make(map[string]interface{})
 	for _, file := range services {
+		if file.Name()[0] == '.' {
+			continue
+		}
 		k, v := readService(projectPath, file.Name())
 		if k == "" {
 			continue
