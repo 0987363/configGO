@@ -1,10 +1,10 @@
 package common
 
 import (
-	"os"
 	"regexp"
 	"time"
 
+	"github.com/0987363/configGO/service"
 	"github.com/radovskyb/watcher"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -22,7 +22,7 @@ func Watch() {
 			select {
 			case event := <-w.Event:
 				log.Warning("Recv file changed event: ", event)
-				os.Exit(0)
+				service.Exit(0)
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:

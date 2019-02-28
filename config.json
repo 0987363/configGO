@@ -1,5 +1,5 @@
 {
-    "address": ":10001",
+    "address": ":0",
     "work": "./work",
     "tls": {
         "cert": "",

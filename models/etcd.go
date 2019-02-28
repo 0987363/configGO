@@ -4,8 +4,6 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
 
-	"golang.org/x/net/context"
-
 	"errors"
 	"strings"
 	"time"
@@ -15,9 +13,7 @@ const (
 	EtcdTimeout = 5 * time.Second
 )
 
-var client *clientv3.Client
-
-func ConnectEtcd(address, ca, cert, key string) error {
+func ConnectEtcd(address, ca, cert, key string) (*clientv3.Client, error) {
 	if ca != "" && cert != "" && key != "" {
 		tlsInfo := transport.TLSInfo{
 			CertFile:      cert,
@@ -26,7 +22,7 @@ func ConnectEtcd(address, ca, cert, key string) error {
 		}
 		tlsConfig, err := tlsInfo.ClientConfig()
 		if err != nil {
-			return errors.New("Init client config failed:" + err.Error())
+			return nil, errors.New("Init client config failed:" + err.Error())
 		}
 
 		cli, err := clientv3.New(clientv3.Config{
@@ -35,10 +31,9 @@ func ConnectEtcd(address, ca, cert, key string) error {
 			TLS:         tlsConfig,
 		})
 		if err != nil {
-			return errors.New("New client tls failed:" + err.Error())
+			return nil, errors.New("New client tls failed:" + err.Error())
 		}
-		client = cli
-		return nil
+		return cli, nil
 	}
 
 	cli, err := clientv3.New(clientv3.Config{
@@ -46,30 +41,7 @@ func ConnectEtcd(address, ca, cert, key string) error {
 		DialTimeout: EtcdTimeout,
 	})
 	if err != nil {
-		return errors.New("New client failed:" + err.Error())
+		return nil, errors.New("New client failed:" + err.Error())
 	}
-	client = cli
-	return nil
-}
-
-func UnRegisterService(key string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), EtcdTimeout)
-	_, err := client.Delete(ctx, key, clientv3.WithPrefix())
-	cancel()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func RegisterService(key string, value string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), EtcdTimeout)
-	_, err := client.Put(ctx, key, value)
-	cancel()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return cli, nil
 }

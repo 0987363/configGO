@@ -77,6 +77,9 @@ func readTomlService(file string) map[string]interface{} {
 
 func readJsonService(file string) map[string]interface{} {
 	data, _ := ioutil.ReadFile(file)
+	if len(data) == 0 {
+		return nil
+	}
 
 	var m map[string]interface{}
 	if err := json.Unmarshal(data, &m); err != nil {

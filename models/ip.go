@@ -1,6 +1,20 @@
 package models
 
-import "net"
+import (
+	"net"
+	"os"
+)
+
+func GetHostIP() string {
+	host, _ := os.Hostname()
+
+	addrs, _ := net.LookupHost(host)
+	for _, addr := range addrs {
+		return addr
+	}
+
+	return "127.0.0.1"
+}
 
 func GetLocalIP() []string {
 	ips := []string{}
