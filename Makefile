@@ -15,10 +15,10 @@ clean:
 	rm -f configGO
 
 release: 
-	GOARCH=amd64 GOOS=linux go build -v -ldflags "-X main.BuildVersion=$(BUILD_VERSION).$(BUILD_NUMBER) -X main.BuildCommit=$(BUILD_COMMIT) -X main.BuildDate=$(BUILD_DATE)" 
+	GO111MODULE=on GOARCH=amd64 GOOS=linux go build -v -ldflags "-X main.BuildVersion=$(BUILD_VERSION).$(BUILD_NUMBER) -X main.BuildCommit=$(BUILD_COMMIT) -X main.BuildDate=$(BUILD_DATE)" 
 
 build: 
-	go build -v -ldflags "-X main.BuildVersion=$(BUILD_VERSION).$(BUILD_NUMBER) -X main.BuildCommit=$(BUILD_COMMIT) -X main.BuildDate=$(BUILD_DATE)" 
+	GO111MODULE=on go build -v -ldflags "-X main.BuildVersion=$(BUILD_VERSION).$(BUILD_NUMBER) -X main.BuildCommit=$(BUILD_COMMIT) -X main.BuildDate=$(BUILD_DATE)" 
 
 run: build
 	./configGO serve
