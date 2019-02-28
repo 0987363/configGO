@@ -11,8 +11,8 @@ import (
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "admin",
-	Short: "admin backend server",
+	Use:   "config",
+	Short: "config backend server",
 }
 
 var configFilePath string
