@@ -42,23 +42,25 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	handlers.Init()
-	go common.Watch()
-	go common.Signal()
+
+	common.Watch()
+	common.Signal()
 
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatal("Listen failed:", err)
 	}
 	log.Println("Listening address:", ln.Addr().String())
-	common.RegisterService(ln.Addr().String())
+	common.Registry(ln.Addr().String())
 
 	srv := &http.Server{
 		Handler: handlers.RootMux,
 	}
+	idleConnsClosed := make(chan struct{})
 	service.AddCloseHook(func() {
 		srv.Shutdown(context.Background())
+		close(idleConnsClosed)
 	})
-
 	if cert != "" && key != "" {
 		log.Infof("Starting configGO tls server on %s.", address)
 		srv.ServeTLS(ln, cert, key)
@@ -66,4 +68,5 @@ func serve(cmd *cobra.Command, args []string) {
 		log.Infof("Starting configGO server on %s.", address)
 		srv.Serve(ln)
 	}
+	<-idleConnsClosed
 }

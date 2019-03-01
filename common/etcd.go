@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/0987363/configGO/models"
 	"github.com/0987363/configGO/service"
-	"go.etcd.io/etcd/clientv3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.etcd.io/etcd/clientv3"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-func RegisterService(lnAddr string) {
+func Registry(lnAddr string) {
 	address := viper.GetString("address")
 	addrs := strings.Split(address, ":")
 	port := addrs[1]
@@ -27,13 +30,48 @@ func RegisterService(lnAddr string) {
 		ip = models.GetHostIP()
 	}
 
-	if client := ConnectEtcd(); client != nil {
-		RegisterEtcd(client, etcdKey(ip, port), etcdValue(ip, port))
+	client := ConnectEtcd()
+	if client == nil {
+		return
 	}
+
+	resp, err := client.Grant(context.TODO(), 60)
+	if err != nil {
+		log.Fatal("Grant etcd failed:", err)
+	}
+	key := etcdKey(ip, port)
+	value := etcdValue(ip, port)
+	if err := RegisterEtcd(client, key, value, clientv3.WithLease(resp.ID)); err != nil {
+		log.Fatal("Register service failed:", err)
+	}
+
+	idleConnsClosed := make(chan struct{})
+	service.AddCloseHook(func() {
+		defer client.Close()
+		close(idleConnsClosed)
+		if err := UnRegisterEtcd(client, key); err != nil {
+			log.Error("Unregister etcd failed:", err)
+		}
+	})
+
+	go func() {
+		for {
+			select {
+			case <-idleConnsClosed:
+				return
+			case <-time.After(20 * time.Second):
+				ka, err := client.KeepAliveOnce(context.TODO(), resp.ID)
+				if err != nil {
+					log.Error("Keepalive etcd service failed:", err)
+				}
+				log.Info("Result:", ka.TTL)
+			}
+		}
+	}()
 }
 
 func etcdKey(ip, port string) string {
-	url := fmt.Sprintf("%s:%s", ip, port)
+	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
 	return filepath.Join(viper.GetString("etcd.url"), url)
 }
 
@@ -52,6 +90,7 @@ func ConnectEtcd() *clientv3.Client {
 		log.Error("Connect to etcd failed:", err)
 		return nil
 	}
+
 	return client
 }
 
@@ -66,17 +105,13 @@ func UnRegisterEtcd(client *clientv3.Client, key string) error {
 	return nil
 }
 
-func RegisterEtcd(client *clientv3.Client, key string, value string) error {
+func RegisterEtcd(client *clientv3.Client, key string, value string, op clientv3.OpOption) error {
 	ctx, cancel := context.WithTimeout(context.Background(), models.EtcdTimeout)
-	_, err := client.Put(ctx, key, value)
+	_, err := client.Put(ctx, key, value, op)
 	cancel()
 	if err != nil {
 		return err
 	}
-
-	service.AddCloseHook(func() {
-		UnRegisterEtcd(client, key)
-	})
 
 	return nil
 }
