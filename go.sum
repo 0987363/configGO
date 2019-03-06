@@ -1,9 +1,9 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-github.com/0987363/crypt v2.0.1+incompatible/go.mod h1:Py2Dji3nwOzRz9RCsjK0icJ0gBpcYMm8vLVqkHKYz7E=
+github.com/0987363/crypt v0.0.0-20190306032048-499e2706b4af/go.mod h1:1LEJMsp8ALPGISTv9Y02xOk9Xsp5TRm+sjlEyNFuqOI=
 github.com/0987363/map-md5 v0.0.0-20190228085436-6927ca68b299 h1:IBcj2J/ZjMUmbgjOcjSDjG+wEzRAKp8I3cStjGxoa90=
 github.com/0987363/map-md5 v0.0.0-20190228085436-6927ca68b299/go.mod h1:cT7V5uHo1mZJnQk+8KqzuAdEG83qB7nVo6BOkxY3Grw=
-github.com/0987363/viper v0.0.0-20190306031529-f74393e9d3b6 h1:NQrHrhvrjkbjQGYG4mQmkN+noWQAkp2UHvJ18fbUR6A=
-github.com/0987363/viper v0.0.0-20190306031529-f74393e9d3b6/go.mod h1:p14FXO5WgygUVi0nvADtdVcfR7p6MDD74ZQjiU6KrZg=
+github.com/0987363/viper v0.0.0-20190306032204-4405ff367b0f h1:tMTBnA7ovKaORngAq0gyUuTzDk4NH77MorKU3VKipPA=
+github.com/0987363/viper v0.0.0-20190306032204-4405ff367b0f/go.mod h1:GBTmc1B1zPxaR48yXFV1Lz+f+C0JkrpigohKHLoafLM=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
