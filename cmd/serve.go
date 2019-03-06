@@ -11,8 +11,8 @@ import (
 	"github.com/0987363/configGO/middleware"
 	"github.com/0987363/configGO/service"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/0987363/cobra"
+	"github.com/0987363/viper"
 )
 
 const defaultAddress = ":10001"

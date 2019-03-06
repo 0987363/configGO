@@ -2,12 +2,13 @@ package common
 
 import (
 	"regexp"
+	"syscall"
 	"time"
 
 	"github.com/0987363/configGO/service"
 	"github.com/radovskyb/watcher"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"github.com/0987363/viper"
 )
 
 func Watch() {
@@ -22,7 +23,18 @@ func Watch() {
 			for {
 				select {
 				case event := <-w.Event:
+					switch event.Op {
+					case watcher.Write:
+					case watcher.Create:
+//					case watcher.Remove:
+//					case watcher.Rename:
+//					case watcher.Move:
+
+					}
+					syscall.Kill(syscall.Getpid(), syscall.SIGUSR2)
+//					syscall.Tgkill(syscall.Getpid(), syscall.Gettid(), syscall.SIGUSR2)
 					log.Warning("Recv file changed event: ", event)
+					continue
 					service.Exit(0)
 				case err := <-w.Error:
 					log.Fatalln(err)

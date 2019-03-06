@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/spf13/viper"
+	"github.com/0987363/viper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

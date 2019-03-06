@@ -5,10 +5,13 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"reflect"
 	"strings"
 
-	"github.com/spf13/viper"
+	"github.com/0987363/viper"
 )
+
+var configCache map[string]interface{}
 
 func ReadWork() map[string]interface{} {
 	work := viper.GetString("work")
@@ -30,6 +33,23 @@ func ReadWork() map[string]interface{} {
 			continue
 		}
 		m[p.Name()] = readProject(filepath.Join(work, p.Name()))
+	}
+
+	configCache = m
+	return m
+}
+
+func ReadConfig(keys ...string) interface{} {
+	m := configCache
+	for _, k := range keys {
+		if m[k] == nil {
+			return nil
+		}
+		if reflect.ValueOf(m[k]).Kind() != reflect.Map {
+			return nil
+		}
+
+		m = m[k].(map[string]interface{})
 	}
 
 	return m

@@ -11,10 +11,19 @@ import (
 
 func Signal() {
 	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2)
-		log.Warning("Recv sig: ", <-sigint)
-
-		service.Exit(0)
+		for {
+			sigint := make(chan os.Signal, 1)
+			signal.Notify(sigint, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2)
+			switch <-sigint {
+			case syscall.SIGUSR2:
+				log.Warning("Recv restart sig.")
+				service.Exit(0)
+			//	service.Restart()
+				continue
+			default:
+				log.Warning("Recv close sig.")
+				service.Exit(0)
+			}
+		}
 	}()
 }

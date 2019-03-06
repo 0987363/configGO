@@ -5,7 +5,7 @@
     },
 	"jpush": {
 		"appkey": "abc",
-		"secret": "efg"
+		"secret": "eaifg"
 	},
 	"log": {
 		"level": "debug",

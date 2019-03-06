@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -10,10 +11,8 @@ import (
 	"github.com/0987363/configGO/models"
 	"github.com/0987363/configGO/service"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"github.com/0987363/viper"
 	"go.etcd.io/etcd/clientv3"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 func Registry(lnAddr string) {
@@ -45,6 +44,14 @@ func Registry(lnAddr string) {
 		log.Fatal("Register service failed:", err)
 	}
 
+	m := ReadConfig([]string{"test2", "pikachu"}...)
+	if m != nil {
+		res, _ := json.Marshal(m)
+		if err := RegisterEtcd(client, filepath.Join(key, "cattle/pikachu"), string(res), clientv3.WithLease(resp.ID)); err != nil {
+			log.Fatal("Register service failed:", err)
+		}
+	}
+
 	idleConnsClosed := make(chan struct{})
 	service.AddCloseHook(func() {
 		defer client.Close()
@@ -60,18 +67,18 @@ func Registry(lnAddr string) {
 			case <-idleConnsClosed:
 				return
 			case <-time.After(20 * time.Second):
-				ka, err := client.KeepAliveOnce(context.TODO(), resp.ID)
+				_, err := client.KeepAliveOnce(context.TODO(), resp.ID)
 				if err != nil {
 					log.Error("Keepalive etcd service failed:", err)
 				}
-				log.Info("Result:", ka.TTL)
 			}
 		}
 	}()
 }
 
 func etcdKey(ip, port string) string {
-	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
+	url := fmt.Sprintf("%s:%s", ip, port)
+	//	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
 	return filepath.Join(viper.GetString("etcd.url"), url)
 }
 
