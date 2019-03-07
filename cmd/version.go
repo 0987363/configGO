@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/0987363/cobra"
+	"github.com/spf13/cobra"
 )
 
 // BuildInfo struct is used to contain the information that is set during

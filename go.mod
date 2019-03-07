@@ -11,6 +11,7 @@ require (
 	github.com/radovskyb/watcher v1.0.6
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.3.0
+	github.com/spf13/cobra v0.0.3
 	go.etcd.io/etcd v0.0.0-20190305225404-b08e6db0e800
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect

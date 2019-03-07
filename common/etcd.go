@@ -2,88 +2,64 @@ package common
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/0987363/configGO/models"
-	"github.com/0987363/configGO/service"
-	log "github.com/sirupsen/logrus"
 	"github.com/0987363/viper"
+	"github.com/radovskyb/watcher"
+	log "github.com/sirupsen/logrus"
 	"go.etcd.io/etcd/clientv3"
 )
 
-func Registry(lnAddr string) {
-	address := viper.GetString("address")
-	addrs := strings.Split(address, ":")
-	port := addrs[1]
-	if port == "0" {
-		rAddrs := strings.Split(lnAddr, ":")
-		port = rAddrs[len(rAddrs)-1]
-	}
+const (
+	baseKey = "/github.com/0987363/configGO"
+)
 
-	ip := addrs[0]
-	if addrs[0] == "0.0.0.0" || addrs[0] == "" {
-		ip = models.GetHostIP()
-	}
+type Application struct {
+	Project     string
+	Service string
+	Value       string
+	Op          watcher.Op
+}
 
+func Registry() chan *Application {
 	client := ConnectEtcd()
 	if client == nil {
-		return
+		log.Fatal("Connect to etcd failed.")
+		return nil
 	}
-
-	resp, err := client.Grant(context.TODO(), 60)
-	if err != nil {
-		log.Fatal("Grant etcd failed:", err)
-	}
-	key := etcdKey(ip, port)
-	value := etcdValue(ip, port)
-	if err := RegisterEtcd(client, key, value, clientv3.WithLease(resp.ID)); err != nil {
-		log.Fatal("Register service failed:", err)
-	}
-
-	m := ReadConfig([]string{"test2", "pikachu"}...)
-	if m != nil {
-		res, _ := json.Marshal(m)
-		if err := RegisterEtcd(client, filepath.Join(key, "cattle/pikachu"), string(res), clientv3.WithLease(resp.ID)); err != nil {
-			log.Fatal("Register service failed:", err)
-		}
-	}
-
-	idleConnsClosed := make(chan struct{})
-	service.AddCloseHook(func() {
-		defer client.Close()
-		close(idleConnsClosed)
-		if err := UnRegisterEtcd(client, key); err != nil {
-			log.Error("Unregister etcd failed:", err)
-		}
-	})
+	c := make(chan *Application, 10)
 
 	go func() {
 		for {
-			select {
-			case <-idleConnsClosed:
-				return
-			case <-time.After(20 * time.Second):
-				_, err := client.KeepAliveOnce(context.TODO(), resp.ID)
-				if err != nil {
-					log.Error("Keepalive etcd service failed:", err)
+			app := <-c
+
+			key := app.Key()
+			switch app.Op {
+			case watcher.Write, watcher.Create:
+				if err := RegisterEtcd(client, key, app.Value); err != nil {
+					log.Error("Register service failed:", err)
 				}
+				continue
+			case watcher.Remove:
+				if err := UnRegisterEtcd(client, key); err != nil {
+					log.Error("Unregister etcd failed:", err)
+				}
+				continue
+			default:
+				log.Error("Unsupport op:", app.Op)
 			}
 		}
 	}()
+
+	return c
 }
 
-func etcdKey(ip, port string) string {
-	url := fmt.Sprintf("%s:%s", ip, port)
+func (app *Application) Key() string {
+	url := fmt.Sprintf("%s/%s", app.Project, app.Service)
 	//	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
-	return filepath.Join(viper.GetString("etcd.url"), url)
-}
-
-func etcdValue(ip, port string) string {
-	return fmt.Sprintf("http://%s:%s", ip, port)
+	return filepath.Join(baseKey, url)
 }
 
 func ConnectEtcd() *clientv3.Client {
@@ -112,9 +88,9 @@ func UnRegisterEtcd(client *clientv3.Client, key string) error {
 	return nil
 }
 
-func RegisterEtcd(client *clientv3.Client, key string, value string, op clientv3.OpOption) error {
+func RegisterEtcd(client *clientv3.Client, key string, value string, op ...clientv3.OpOption) error {
 	ctx, cancel := context.WithTimeout(context.Background(), models.EtcdTimeout)
-	_, err := client.Put(ctx, key, value, op)
+	_, err := client.Put(ctx, key, value, op...)
 	cancel()
 	if err != nil {
 		return err

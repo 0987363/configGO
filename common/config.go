@@ -2,115 +2,195 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"reflect"
 	"strings"
 
-	"github.com/0987363/viper"
+	"github.com/radovskyb/watcher"
+	log "github.com/sirupsen/logrus"
 )
 
-var configCache map[string]interface{}
+type Worker map[string]interface{}
 
-func ReadWork() map[string]interface{} {
-	work := viper.GetString("work")
+func (w Worker) ParseProject(c chan *Application) {
+	for project, v := range w {
+		w, ok := v.(Worker)
+		if !ok {
+			continue
+		}
+		for service, v := range w {
+			w, ok := v.(Worker)
+			if !ok {
+				continue
+			}
+			c <- &Application{
+				Project: project,
+				Service: service,
+				Value:   w.ToString(),
+				Op:      watcher.Create,
+			}
+		}
+	}
+}
+
+func (w Worker) SearchProject(project string) Worker {
+	if m, ok := w[project]; ok {
+		if m, ok := m.(Worker); ok {
+			return m
+		}
+	}
+	return nil
+}
+
+func (w Worker) SearchService(project, service string) *Worker {
+	m, ok := w[project]
+	if !ok {
+		return nil
+	}
+	w, ok = m.(Worker)
+	if !ok {
+		return nil
+	}
+
+	m, ok = w[service]
+	if !ok {
+		return nil
+	}
+	w, ok = m.(Worker)
+	if !ok {
+		return nil
+	}
+
+	return &w
+}
+
+func trimFileName(file string) string {
+	return file[0 : len(file)-len(filepath.Ext(file))]
+}
+
+func splitPath(path string) (string, string) {
+	dir, name := filepath.Split(path)
+	project := filepath.Base(dir)
+	return project, trimFileName(name)
+}
+
+func (w Worker) ToString() string {
+	if w == nil {
+		return ""
+	}
+
+	data, _ := json.Marshal(w)
+	return string(data)
+}
+
+func (w Worker) Update(path string, c chan *Application) error {
+	m := readService(path)
+	if m == nil {
+		return errors.New("Read service failed:" + path)
+	}
+
+	project, service := splitPath(path)
+//	p := w.SearchProject(project)
+	s := w.SearchService(project, service)
+	if s == nil {
+		return errors.New("Read project failed:" + path)
+	}
+
+	if reflect.DeepEqual(m, *s) {
+		return nil
+	}
+
+	log.Info("Found diff:", m, *s)
+
+	*s = m
+	log.Info("Start send new app:", project, service)
+	c <- &Application{
+		Project: project,
+		Service: service,
+		Value:   m.ToString(),
+		Op:      watcher.Write,
+	}
+
+	return nil
+}
+
+func NewWorker(work string) Worker {
 	if work == "" {
 		return nil
 	}
 
-	nameSpaces, err := ioutil.ReadDir(work)
+	projects, err := ioutil.ReadDir(work)
 	if err != nil {
 		log.Fatal("Read work failed:", err)
 	}
 
-	m := make(map[string]interface{})
-	for _, p := range nameSpaces {
+	w := make(Worker)
+	for _, p := range projects {
 		if p.Name()[0] == '.' {
 			continue
 		}
 		if !p.IsDir() {
 			continue
 		}
-		m[p.Name()] = readProject(filepath.Join(work, p.Name()))
+		w[p.Name()] = readApplication(filepath.Join(work, p.Name()))
 	}
 
-	configCache = m
-	return m
+	return w
 }
 
-func ReadConfig(keys ...string) interface{} {
-	m := configCache
-	for _, k := range keys {
-		if m[k] == nil {
-			return nil
-		}
-		if reflect.ValueOf(m[k]).Kind() != reflect.Map {
-			return nil
-		}
-
-		m = m[k].(map[string]interface{})
-	}
-
-	return m
-}
-
-func readProject(projectPath string) map[string]interface{} {
+func readApplication(projectPath string) Worker {
 	services, err := ioutil.ReadDir(projectPath)
 	if err != nil {
 		log.Fatal("Read project failed:", err, projectPath)
 	}
 	if len(services) == 0 {
-		return map[string]interface{}{}
+		return Worker{}
 	}
 
-	project := make(map[string]interface{})
+	w := make(Worker)
 	for _, file := range services {
 		if file.Name()[0] == '.' {
 			continue
 		}
-		k, v := readService(projectPath, file.Name())
-		if k == "" {
+		ext := filepath.Ext(file.Name())
+		if ext == "" {
 			continue
 		}
-		project[k] = v
+
+		if m := readService(filepath.Join(projectPath, file.Name())); m != nil {
+			w[trimFileName(file.Name())] = m
+		}
 	}
 
-	return project
+	return w
 }
 
-func readService(dir, name string) (string, map[string]interface{}) {
-	ext := filepath.Ext(name)
-	file := filepath.Join(dir, name)
-	name = strings.TrimSuffix(name, ext)
-
-	if len(ext) > 3 && ext[0] == '.' {
-		ext = ext[1:]
-	}
-
-	switch strings.ToLower(ext) {
-	case "json":
-		return name, readJsonService(file)
-	case "toml":
-		return name, readTomlService(file)
-	default:
-		return name, nil
-	}
-}
-
-func readTomlService(file string) map[string]interface{} {
-	return nil
-}
-
-func readJsonService(file string) map[string]interface{} {
-	data, _ := ioutil.ReadFile(file)
+func readService(path string) Worker {
+	data, _ := ioutil.ReadFile(path)
 	if len(data) == 0 {
 		return nil
 	}
 
-	var m map[string]interface{}
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".json":
+		return parseJson(data)
+	case ".toml":
+		return parseToml(data)
+	default:
+		return nil
+	}
+}
+
+func parseToml(data []byte) Worker {
+	return nil
+}
+
+func parseJson(data []byte) Worker {
+	var m Worker
 	if err := json.Unmarshal(data, &m); err != nil {
-		log.Fatalf("Unmarshal service:%s failed:%v", file, err)
+		log.Fatalf("Unmarshal service failed:%v", err)
 	}
 
 	return m

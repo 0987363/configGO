@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/0987363/configGO/service"
+	"github.com/0987363/configGO/daemon"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,12 +17,12 @@ func Signal() {
 			switch <-sigint {
 			case syscall.SIGUSR2:
 				log.Warning("Recv restart sig.")
-				service.Exit(0)
+				daemon.Exit()
 			//	service.Restart()
 				continue
 			default:
 				log.Warning("Recv close sig.")
-				service.Exit(0)
+				daemon.Exit()
 			}
 		}
 	}()

@@ -4,8 +4,8 @@
         "mongodb": "172.31.174.96:27017"
     },
 	"jpush": {
-		"appkey": "abc",
-		"secret": "eaifg"
+		"appkey": "11111111111",
+		"secret": "111111111112" 
 	},
 	"log": {
 		"level": "debug",
