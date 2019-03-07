@@ -16,24 +16,19 @@ const (
 	baseKey = "/github.com/0987363/configGO"
 )
 
-type Application struct {
-	Project     string
-	Service string
-	Value       string
-	Op          watcher.Op
-}
-
-func Registry() chan *Application {
+func Registry() chan *Service {
 	client := ConnectEtcd()
 	if client == nil {
 		log.Fatal("Connect to etcd failed.")
 		return nil
 	}
-	c := make(chan *Application, 10)
+	c := make(chan *Service, 10)
 
 	go func() {
 		for {
 			app := <-c
+
+			log.Infof("Start update: %s %s.", app.Project, app.Service)
 
 			key := app.Key()
 			switch app.Op {
@@ -56,7 +51,7 @@ func Registry() chan *Application {
 	return c
 }
 
-func (app *Application) Key() string {
+func (app *Service) Key() string {
 	url := fmt.Sprintf("%s/%s", app.Project, app.Service)
 	//	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
 	return filepath.Join(baseKey, url)

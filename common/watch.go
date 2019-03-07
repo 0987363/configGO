@@ -10,12 +10,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Watch(c chan *Application) {
-	w := NewWorker(viper.GetString("work"))
-	log.Info("Read first worker:", w)
-
+func Watch(c chan *Service) {
+	w := NewWorker(viper.GetString("work"), c)
+	log.Info("Worker: ", w)
 	if w != nil {
-		w.ParseProject(c)
+		w.ParseProject()
 	}
 
 	go func() {
@@ -31,23 +30,20 @@ func Watch(c chan *Application) {
 				case event := <- watch.Event:
 					switch event.Op {
 					case watcher.Write:
-						if err := w.Update(event.Path, c); err != nil {
+					case watcher.Create:
+						if err := w.Update(event.Path); err != nil {
 							log.Error("Update worker failed: ", err)
 						}
-						log.Warning("file modified: ", event.Name(), event.Path, event.String(), event.FileInfo)
+						log.Warning("file modified: ", event.String())
 						continue
-					case watcher.Create:
-						log.Warning("file create: ", event.Name(), event.Path, event.String(), event.FileInfo)
-						continue
-						//					case watcher.Remove:
+					case watcher.Remove:
+						if err := w.Remove(event.Path); err != nil {
+							log.Error("Update worker failed: ", err)
+						}
 					default:
+						log.Warning("Unknown op: ", event.String())
 						continue
 					}
-					//		syscall.Kill(syscall.Getpid(), syscall.SIGUSR2)
-					//					syscall.Tgkill(syscall.Getpid(), syscall.Gettid(), syscall.SIGUSR2)
-					//		log.Warning("Recv file changed event: ", event)
-					//		continue
-					//		service.Exit()
 				case err := <-watch.Error:
 					log.Fatalln(err)
 				case <-watch.Closed:
