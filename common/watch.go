@@ -28,6 +28,10 @@ func Watch(c chan *Service) {
 			for {
 				select {
 				case event := <- watch.Event:
+					if event.IsDir() {
+						continue
+					}
+
 					switch event.Op {
 					case watcher.Write:
 					case watcher.Create:
