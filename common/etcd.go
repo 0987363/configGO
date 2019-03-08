@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	"github.com/0987363/configGO/models"
@@ -20,7 +19,6 @@ func Registry() chan *Service {
 	client := ConnectEtcd()
 	if client == nil {
 		log.Fatal("Connect to etcd failed.")
-		return nil
 	}
 	c := make(chan *Service, 10)
 
@@ -51,9 +49,7 @@ func Registry() chan *Service {
 }
 
 func (app *Service) Key() string {
-	url := fmt.Sprintf("%s/%s", app.Project, app.Service)
-	//	url := fmt.Sprintf("%s:%s-%s", ip, port, uuid.NewV4().String())
-	return filepath.Join(baseKey, url)
+	return filepath.Join(baseKey, app.Project, app.Service)
 }
 
 func ConnectEtcd() *clientv3.Client {
