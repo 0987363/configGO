@@ -27,10 +27,9 @@ func Registry() chan *Service {
 	go func() {
 		for {
 			app := <-c
-
-			log.Infof("Start update: %s %s.", app.Project, app.Service)
-
 			key := app.Key()
+			log.Info("Start update: ", key)
+
 			switch app.Op {
 			case watcher.Write, watcher.Create:
 				if err := RegisterEtcd(client, key, app.Value); err != nil {

@@ -18,7 +18,7 @@ func Signal() {
 			case syscall.SIGUSR2:
 				log.Warning("Recv restart sig.")
 				daemon.Exit()
-			//	service.Restart()
+				//	service.Restart()
 				continue
 			default:
 				log.Warning("Recv close sig.")

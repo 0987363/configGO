@@ -3,13 +3,9 @@ package common
 import (
 	"encoding/json"
 	"errors"
-	"reflect"
-
-	//	"errors"
 	"io/ioutil"
 	"path/filepath"
-
-	//	"reflect"
+	"reflect"
 	"strings"
 
 	"github.com/radovskyb/watcher"
@@ -70,7 +66,6 @@ func (w *Worker) GetProject(key string) *Project {
 		Project: key,
 		Map:     m2,
 	}
-	return nil
 }
 
 func (w *Worker) GetService(project, service string) *Service {

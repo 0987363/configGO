@@ -3,8 +3,8 @@ package cmd
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/0987363/viper"
+	"github.com/spf13/cobra"
 
 	log "github.com/sirupsen/logrus"
 )
