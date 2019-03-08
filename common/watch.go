@@ -33,8 +33,7 @@ func Watch(c chan *Service) {
 					}
 
 					switch event.Op {
-					case watcher.Write:
-					case watcher.Create:
+					case watcher.Write, watcher.Create:
 						if err := w.Update(event.Path); err != nil {
 							log.Error("Update worker failed: ", err)
 						}

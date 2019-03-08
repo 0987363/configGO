@@ -82,15 +82,21 @@ func (w *Worker) GetService(project, service string) *Service {
 	return s
 }
 
+func (w *Worker) Send(s *Service) {
+	if len(s.Map) == 0 {
+		return
+	}
+
+	s.Op = watcher.Write
+	s.ToString()
+	w.Ch <- s
+}
+
 func (w *Worker) ParseProject() {
 	for project, v := range w.Map {
 		for service, _ := range v.(map[string]interface{}) {
 			s := w.GetService(project, service)
-			if len(s.Value) == 0 {
-				continue
-			}
-			s.Op = watcher.Create
-			w.Ch <- s
+			w.Send(s)
 		}
 	}
 }
@@ -131,8 +137,7 @@ func (w Worker) Update(path string) error {
 	}
 
 	w.AddService(s)
-	s.Op = watcher.Write
-	w.Ch <- s
+	w.Send(s)
 
 	return nil
 }
@@ -259,7 +264,6 @@ func (s *Service) Load(path string) (*Service, error) {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".json":
 		s.Map = parseJson(data)
-		s.ToString()
 		return s, nil
 	default:
 		return s, nil
