@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/0987363/configGO/daemon"
+	"github.com/0987363/configGO/models"
 	"github.com/0987363/viper"
 	"github.com/radovskyb/watcher"
-	log "github.com/sirupsen/logrus"
 )
 
-func Watch(c chan *Service) {
+func WatchFile(c chan *Service) {
+	log := models.LoggerInit("watch_file")
+
 	w := NewWorker(viper.GetString("work"), c)
 	log.Info("Worker: ", w)
 	if w != nil {
