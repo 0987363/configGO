@@ -18,6 +18,7 @@ func init() {
 }
 
 func serve(cmd *cobra.Command, args []string) {
-	c := common.Registry()
-	common.Watch(c)
+	common.WatchEtcd()
+	common.WatchS3()
+	common.WatchSqs()
 }
