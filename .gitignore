@@ -4,3 +4,4 @@
 *.pyc
 configGO
 vendor
+druid.json

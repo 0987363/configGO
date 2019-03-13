@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/0987363/configGO/models"
+	"github.com/0987363/viper"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,9 +18,9 @@ import (
 
 func WatchS3() {
 	sess := session.New(&aws.Config{
-		Region:      aws.String(Region),
+		Region:      aws.String(viper.GetString("aws.sqs.region")),
 		MaxRetries:  aws.Int(5),
-		Credentials: credentials.NewStaticCredentials(Key, Secret, ""),
+		Credentials: credentials.NewStaticCredentials(viper.GetString("aws.sqs.key"), viper.GetString("aws.sqs.secret"), ""),
 	})
 	svc := s3.New(sess)
 

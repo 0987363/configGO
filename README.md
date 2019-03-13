@@ -1,5 +1,7 @@
 The Config Server Center for Go
 -------------------------
 
-This is a config server center, convert config file(json, toml) to etcd and watch it.
+This is a config server center.
+
+Monitor sqs, recv s3 event, download config from s3 and write to etcd.
 

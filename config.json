@@ -1,14 +1,21 @@
 {
-    "address": ":0",
-    "work": "./work",
-    "tls": {
-        "cert": "",
-        "key": ""
-    },
     "etcd": {
         "address": "http://192.168.88.16:2379",
         "ca": "",
         "cert": "",
         "key": ""
+    },
+    "aws": {
+        "sqs": {
+            "queue": "",
+            "region": "",
+            "key": "",
+            "secret": ""
+        },
+        "s3": {
+            "region": "",
+            "key": "",
+            "secret": ""
+        }
     }
 }
