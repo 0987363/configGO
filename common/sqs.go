@@ -65,6 +65,12 @@ func init() {
 }
 
 func WatchSqs() {
+	log := models.LoggerInit("watch_sqs")
+
+	if viper.GetString("aws.sqs.key") == "" {
+		log.Fatal("Aws sqs config invalid.")
+	}
+
 	sess := session.New(&aws.Config{
 		Region:      aws.String(viper.GetString("aws.sqs.region")),
 		MaxRetries:  aws.Int(5),
@@ -80,8 +86,6 @@ func WatchSqs() {
 	}
 
 	chFinish := make(chan *AwsNotify, 10)
-
-	log := models.LoggerInit("watch_sqs")
 
 	go func() {
 		for {
@@ -109,7 +113,13 @@ func WatchSqs() {
 			continue
 		}
 		for _, message := range resp.Messages {
-			notify := AwsNotify{}
+			notify := &AwsNotify{
+				Ch	:	chFinish,
+				Msg	:	message,
+			}
+
+			log.Infof("Send message ID: %s to s3 watch", *message.MessageId)
+			/*
 			if err := json.Unmarshal([]byte(*message.Body), &notify); err != nil {
 				log.Error("Unmarshal message failed: ", err)
 				continue
@@ -120,7 +130,19 @@ func WatchSqs() {
 			notify.Key = notify.Records[0].S3.Object.Key
 			notify.Ch = chFinish
 			notify.Msg = message
-			chNotify <- &notify
+			*/
+			chNotify <- notify
 		}
 	}
 }
+
+func (notify *AwsNotify) Init() error {
+	if err := json.Unmarshal([]byte(*notify.Msg.Body), &notify); err != nil {
+		return err
+	}
+
+	notify.Bucket = notify.Records[0].S3.Bucket.Name
+	notify.Key = notify.Records[0].S3.Object.Key
+	return nil
+}
+

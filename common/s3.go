@@ -17,19 +17,27 @@ import (
 )
 
 func WatchS3() {
+	log := models.LoggerInit("watch_s3")
+
+	if viper.GetString("aws.s3.key") == "" {
+		log.Fatal("Aws s3 config invalid.")
+	}
+
 	sess := session.New(&aws.Config{
 		Region:      aws.String(viper.GetString("aws.sqs.region")),
 		MaxRetries:  aws.Int(5),
-		Credentials: credentials.NewStaticCredentials(viper.GetString("aws.sqs.key"), viper.GetString("aws.sqs.secret"), ""),
+		Credentials: credentials.NewStaticCredentials(viper.GetString("aws.s3.key"), viper.GetString("aws.s3.secret"), ""),
 	})
 	svc := s3.New(sess)
-
-	log := models.LoggerInit("watch_s3")
 
 	go func() {
 		for {
 			select {
 			case notify := <-chNotify:
+				if err := notify.Init(); err != nil {
+					log.Info("Init notify failed: ", err)
+					continue
+				}
 				s := NewService(notify.Key)
 				if s == nil {
 					notify.Ch <- notify
