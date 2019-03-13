@@ -7,6 +7,7 @@ import (
 	"github.com/0987363/configGO/models"
 	"github.com/0987363/viper"
 	"github.com/radovskyb/watcher"
+	log "github.com/sirupsen/logrus"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -14,50 +15,44 @@ const (
 	baseKey = "/github.com/0987363/configGO"
 )
 
-var chService chan *Service
-
-func init() {
-	chService = make(chan *Service, 10)
-}
-
-func WatchEtcd() {
-	log := models.LoggerInit("watch_etcd")
-
-	client, err := ConnectEtcd()
+func Registry() chan *Service {
+	client := ConnectEtcd()
 	if client == nil {
-		log.Fatal("Connect to etcd failed: ", err)
+		log.Fatal("Connect to etcd failed.")
 	}
+	c := make(chan *Service, 10)
 
-	go func(){
-	for {
-		app := <-chService
-		key := app.Key()
-		log.Info("Start update: ", key)
+	go func() {
+		for {
+			app := <-c
+			key := app.Key()
+			log.Info("Start update: ", key)
 
-		switch app.Op {
-		case watcher.Write, watcher.Create:
-			app.ToString()
-			if err := RegisterEtcd(client, key, app.Value); err != nil {
-				log.Error("Register service failed:", err)
+			switch app.Op {
+			case watcher.Write, watcher.Create:
+				if err := RegisterEtcd(client, key, app.Value); err != nil {
+					log.Error("Register service failed:", err)
+				}
+				continue
+			case watcher.Remove:
+				if err := UnRegisterEtcd(client, key); err != nil {
+					log.Error("Unregister etcd failed:", err)
+				}
+				continue
+			default:
+				log.Error("Unsupport op:", app.Op)
 			}
-			continue
-		case watcher.Remove:
-			if err := UnRegisterEtcd(client, key); err != nil {
-				log.Error("Unregister etcd failed:", err)
-			}
-			continue
-		default:
-			log.Error("Unsupport op:", app.Op)
 		}
-	}
 	}()
+
+	return c
 }
 
 func (app *Service) Key() string {
 	return filepath.Join(baseKey, app.Project, app.Service)
 }
 
-func ConnectEtcd() (*clientv3.Client, error) {
+func ConnectEtcd() *clientv3.Client {
 	address := viper.GetString("etcd.address")
 	ca := viper.GetString("etcd.ca")
 	cert := viper.GetString("etcd.cert")
@@ -65,10 +60,11 @@ func ConnectEtcd() (*clientv3.Client, error) {
 
 	client, err := models.ConnectEtcd(address, ca, cert, key)
 	if err != nil {
-		return nil, err
+		log.Error("Connect to etcd failed:", err)
+		return nil
 	}
 
-	return client, nil
+	return client
 }
 
 func UnRegisterEtcd(client *clientv3.Client, key string) error {

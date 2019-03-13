@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -119,7 +118,7 @@ func (w *Worker) Remove(path string) error {
 
 func (w Worker) Update(path string) error {
 	s := NewService(path)
-	s, err := s.LoadFile(path)
+	s, err := s.Load(path)
 	if err != nil {
 		return errors.New("Load service failed:" + path)
 	}
@@ -207,7 +206,7 @@ func (n *Project) LoadProject(f func(*Service), path string) {
 			Project: n.Project,
 			Service: trimFileName(file.Name()),
 		}
-		s, err := s.LoadFile(filepath.Join(path, file.Name()))
+		s, err := s.Load(filepath.Join(path, file.Name()))
 		if err != nil {
 			log.Error("Load new service failed:", err)
 			continue
@@ -237,11 +236,6 @@ func LoadService(path string) (map[string]interface{}, error) {
 
 func NewService(path string) *Service {
 	dir, name := filepath.Split(path)
-	project := filepath.Base(dir)
-	if project == "" || name == "" {
-		return nil
-	}
-
 	return &Service{
 		Project: filepath.Base(dir),
 		Service: trimFileName(name),
@@ -253,21 +247,7 @@ func (s *Service) ToString() {
 	s.Value = string(data)
 }
 
-func (s *Service) Load(read io.Reader) (*Service, error) {
-	data, err := ioutil.ReadAll(read)
-	if err != nil {
-		return nil, err
-	}
-	if len(data) == 0 {
-		return s, nil
-	}
-
-	s.Map = parseJson(data)
-	s.Op = watcher.Write
-	return s, nil
-}
-
-func (s *Service) LoadFile(path string) (*Service, error) {
+func (s *Service) Load(path string) (*Service, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -276,7 +256,6 @@ func (s *Service) LoadFile(path string) (*Service, error) {
 		return s, nil
 	}
 
-	s.Op = watcher.Write
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".json":
 		s.Map = parseJson(data)
