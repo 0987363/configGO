@@ -8,6 +8,7 @@ import (
 	"github.com/0987363/viper"
 	logrustash "github.com/bshuster-repo/logrus-logstash-hook"
 	"github.com/sirupsen/logrus"
+	"github.com/onrik/logrus/filename"
 )
 
 func LoggerInit(method string) *logrus.Entry {
@@ -39,6 +40,10 @@ func LoggerInit(method string) *logrus.Entry {
 			}})
 		logger.Hooks.Add(hook)
 	}
+
+	filenameHook := filename.NewHook()
+	filenameHook.Field = "source"
+	logger.Hooks.Add(filenameHook)
 
 	return logger.WithFields(
 		logrus.Fields{
